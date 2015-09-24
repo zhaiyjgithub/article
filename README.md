@@ -2,6 +2,22 @@
 some article about programm.
 ***
 
+##2015-09-20
+
+>UIScrollView 实践经验
+
+ * 原文地址:这篇文章不需要爬梯  [f*ck GFW](http://tech.glowing.com/cn/practice-in-uiscrollview/)
+ 
+如标题所讲,是关于UIScrollView的实践经验的.读罢全篇文章,我觉得这是对UISCrollview的最佳实践之一了.当我看到这篇文章的时候,一个词:**awesome**
+ 
+文中是从UIScrollView的关于触摸,滑动等事件以及对应过程的代理协议出发,讨论了**UITableView**(UIScrollView的子类)在图片优化方面的处理.UIScrollView的**分页实现方式**,竟然还有**ViewController重用**等问题.其中关于**UITableView**的优化让我收获最多.同时,我自己也跟着里面的分析过程写了一个测试[Demo](----).
+
+在[Demo]()中,我并没有使用文章中使用SDWebImage来请求图片并测试.而是使用最简单的检测方法.详情请看[Demo]()的实现过程.当然你也可以直接到一些图片网站测试更加好了,比如我之前使用的是[500px](http://www.jianshu.com/p/f1208b5e42d9) , 这个就是当时学习**swift**的网络请求库**alamoFire**找到的.当然,这个关于**alamoFire**的两篇教程质量还是杠杠的.So,enjoy it!
+	
+	cell.textLabel.text = [NSString stringWithFormat:@"row:%d",indexPath.row];
+	
+当然最好是按照文中提到的**问题1,2,3**一步步来跟着分析过程来测试.
+
 ##2015-09-12
 >Swift:The rules of being weak and unowned in clusures and capture lists(Xcode 6 Beta 7)
 
