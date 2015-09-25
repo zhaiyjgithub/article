@@ -4,7 +4,7 @@ some article about programm.
 
 ##2015-09-25
 
-![](file:/Users/john/Desktop/20150925.jpg)  
+![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/20150925.jpg) 
 
 > iOS Block vs delegate
 
@@ -39,7 +39,7 @@ A 3rd option is notifications. This is best used when there are possibly multipl
 
 ##2015-09-20
 
-![](file:/Users/john/Desktop/20150920.jpg)  
+![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/20150920.jpg) 
 
 
 >UIScrollView 实践经验
@@ -65,7 +65,7 @@ A 3rd option is notifications. This is best used when there are possibly multipl
 
 ##2015-09-12
 
-![](file:/Users/john/Desktop/20150912.jpg)  
+![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/20150912.jpg)   
 
 >Swift:The rules of being weak and unowned in clusures and capture lists(Xcode 6 Beta 7)
 
