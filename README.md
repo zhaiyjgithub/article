@@ -54,7 +54,11 @@ A 3rd option is notifications. This is best used when there are possibly multipl
 	
 	cell.textLabel.text = [NSString stringWithFormat:@"row:%d",indexPath.row];
 	
-当然最好是按照文中提到的**问题1,2,3**一步步来跟着分析过程来测试.
+当然最好是按照文中提到的**问题1,2,3**一步步来跟着分析过程来测试.记得好好留意这个代理方法:
+
+    - (void)scrollViewWillEndDragging:(UIScrollView *)scrollView withVelocity:(CGPoint)velocity targetContentOffset:(inout CGPoint *)targetContentOffset
+    
+最后多谢博主的分享.happy everyday!!
 
 ---
 
