@@ -2,7 +2,45 @@
 some article about programm.
 ***
 
+##2015-09-25
+
+![](file:/Users/john/Desktop/20150925.jpg)  
+
+> iOS Block vs delegate
+
+ * 原文地址: [f*ck GFW](http://blog.stablekernel.com/blocks-or-delegates/),在CocoaChina中也有对应的[译文](http://www.cocoachina.com/ios/20150925/13525.html)
+ 
+
+###从delegate到Block
+
+刚开始学习不同页面的时候,当然学习的是使用代理传值了.对于刚开始的学习者来说这种比较容易理解.后面学习使用AFNetworking,才看到别人家是使用Block来传值的.之后在自己的开发的项目中也使用过Block传值.用在对AFN的一些方法进行了进一步的封装以及两个界面之间的传值.
+
+###什么时候使用Block,什么时候使用delegate呢?
+
+跟着上面的描述,用了一段时间之后自己心中也提出了这样一个问题.虽然一直都会去搞清楚,似乎还是似懂非懂.也是可能是基础还是很差呢,在钻牛角尖!aha~今天特地去stackoverflow找到这么一段非常好的[回答](http://stackoverflow.com/questions/21771606/objective-c-delegate-or-c-style-block-callback).
+
+>Each has its use.
+
+Delegates should be used when there are ***multiple "events"*** to tell the delegate about and/or when the class needs to get data from the delegate. A good example is with **UITableView**.
+
+A block is best used when there is ***only one (or maybe two) event***. A **completion block** (and maybe a failure block) are a good example of this. A good example is with NSURLConnection sendAsynchronousRequest:queue:completionHandler:.
+
+A 3rd option is notifications. This is best used when there are possibly multiple (and unknown) interested parties in the event(s). The other two are only useful when there is one (and known) interested party.
+
+
+从上面的回答中我们可以知道对于需要传递多个不同的数据时候使用代理代理,就像举例说的**UITableview**,一个代理包含可以声明多个代理方法实现不同数据的传递.对于只有单一事件或者数据传递可以直接使用Block,我自己也是认为在这种情况使用Block可以更加简洁.比如在网络请求部分就是使用了Block,非常简洁明了.
+
+###那么对于多人开发的时候呢?应该选择代理还是Block?
+
+这个问题我实在微博看到别人对这边[译文](http://www.cocoachina.com/ios/20150925/13525.html)的一个评论.暂时没有思考得到其中的原因.为什么这么提问,怎样去回答??先留着.
+
+---
+
+
 ##2015-09-20
+
+![](file:/Users/john/Desktop/20150920.jpg)  
+
 
 >UIScrollView 实践经验
 
@@ -18,7 +56,12 @@ some article about programm.
 	
 当然最好是按照文中提到的**问题1,2,3**一步步来跟着分析过程来测试.
 
+---
+
 ##2015-09-12
+
+![](file:/Users/john/Desktop/20150912.jpg)  
+
 >Swift:The rules of being weak and unowned in clusures and capture lists(Xcode 6 Beta 7)
 
 ### swift：weak和unowned关键字在闭包以及捕获列表中的使用规则
