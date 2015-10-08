@@ -2,6 +2,19 @@
 some article about programm.
 ***
 
+##2015-10-08
+
+###UIWebView与JS的深度交互
+
+>  博主一直以来是我的学习榜样，很多很好的解决方法。
+
+ * 原文地址[f*ck GFW](http://kittenyang.com/webview-javascript-bridge/)
+
+记得以前刚开始的CRM系统也是使用JS来开发的。当时自己也是尝试解决原生与JS之间的交互问题，但是效果还不是很理想。思路其实也是跟当前博主的思路一样的， 可惜当时自己的能力与任务繁重问题导致没有更好地去解决。
+ 曾记得，之前微博也是转发了一个第三方库用来解决原生与JS之间的深度交互，需要找找。**最后也是暴露了自己需要找个时间来学习前段才可以了。**
+
+
+
 ##2015-09-12
 >Swift:The rules of being weak and unowned in clusures and capture lists(Xcode 6 Beta 7)
 
