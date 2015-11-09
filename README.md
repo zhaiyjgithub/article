@@ -1,6 +1,131 @@
 # article
 some article about programm.
 ***
+##2015-11-07
+
+### coreText框架学习
+
+> 学习coreText，让我想起了大学那段学习液晶屏幕驱动显示的时光。
+
+ * 原文地址 [f* GFW](http://www.zoomfeng.com/blog/coretextshi-yong-jiao-cheng-%5B%3F%5D.html)
+ 
+ 
+####概览
+
+#####简介
+ coteText是一个apple的文版排版框架。它直接将文本的内容，颜色，字体等全部属性交给coreGraphics进行渲染。由于直接与coreGraphics交互，因此渲染非常的高效。
+ 
+#####组成架构
+ 
+![coreText架构](/Users/admin/Desktop/coreText架构.png)
+
+#####coteText与WebView在排版的差异
+
+*  coretext占用内存更少，渲染更快。
+*  coretext在渲染之前就已经知道了文本的全部属性，其中包含了文本的高度等等属性。但是WebView只可以在渲染之后才能知道如何文本的高度。
+* coretext毫无疑问的是具有最好的原生交互效果。然后WebView只可以通过JS进行深度交互，而且交互效果效果也是比不上原生的。
+* 但是coretext并不能想WebView那样支持文本的复制与粘贴。
+* coretext在排版上面的逻辑更加复杂。当然，你想控制的地方更多更加深入，逻辑的复杂度也是伴随而来的。
+
+
+
+
+####绘制纯文本
+
+	 // 1.获取上下文
+    CGContextRef contextRef = UIGraphicsGetCurrentContext();
+    
+    // 2.转换坐标系
+    CGContextSetTextMatrix(contextRef, CGAffineTransformIdentity);
+    CGContextTranslateCTM(contextRef, 0, self.bounds.size.height);
+    CGContextScaleCTM(contextRef, 1.0, -1.0);
+    
+    // 3.创建绘制区域，可以对path进行个性化裁剪以改变显示区域
+    CGMutablePathRef path = CGPathCreateMutable();
+    CGPathAddRect(path, NULL, self.bounds);
+    
+    // 4.创建需要绘制的文字
+    NSMutableAttributedString *attributed = [[NSMutableAttributedString alloc] initWithString:self.text];
+    
+    // 设置行距等样式
+    [[self class] addGlobalAttributeWithContent:attributed font:self.font];
+    
+    // 加点料
+    [attributed addAttribute:NSFontAttributeName value:[UIFont systemFontOfSize:30] range:NSMakeRange(10, 5)];
+    
+    [attributed addAttribute:NSForegroundColorAttributeName value:[UIColor greenColor] range:NSMakeRange(5, 10)];
+    
+    // 5.根据NSAttributedString生成CTFramesetterRef
+    CTFramesetterRef framesetter = CTFramesetterCreateWithAttributedString((CFAttributedStringRef)attributed);
+    
+    CTFrameRef ctFrame = CTFramesetterCreateFrame(framesetter, CFRangeMake(0, attributed.length), path, NULL);
+    
+    // 6.绘制
+    CTFrameDraw(ctFrame, contextRef);
+    
+   
+#####1 获取上下文
+
+	CGContextRef contextRef = UIGraphicsGetCurrentContext();
+   就是获取当前画布的上下文，因为会将这个上下文传递给coreGraphics进行渲染的。
+上下文，这个词第一次出现我大学学习RTOS的时候。当系统切换线程的时候，就保存当前线程的上下文到栈里面，然后又从栈中得到将要切换到的线程的上下文并进行执行。哈哈，当初翻译这个context的前辈是怎样想到这个词的呢?好奇怪但是又觉得好贴切。
+
+#####2 切换坐标系
+	CGContextSetTextMatrix(contextRef, CGAffineTransformIdentity);
+因为coreGraphics的原点是在左下角，coretext的是在左上角。因此，要对画布用当前的矩阵进行翻转坐标系。
+	
+	CGContextTranslateCTM(contextRef, 0, self.bounds.size.height);
+将当前的画布的原点平移到**{0，self.bounds.size.height}**
+
+如果没有进行翻转坐标系，会发现文本产生镜像式的倒转显示。
+
+##### 3 创建绘制区域
+	    CGMutablePathRef path = CGPathCreateMutable();
+        CGPathAddRect(path, NULL, self.bounds);
+        
+对path进行个性化裁剪从而改变显示区域。如果代码的一样，一般都是与当前view的bounds保持一致，就是满显示。
+
+##### 4 创建需要绘制的文本
+	NSMutableAttributedString *attributed = [[NSMutableAttributedString alloc] initWithString:self.text];
+    
+ 这时候，准备开始生产东西了，当然就是从文本这个材料开始了。
+ 
+ 	[[self class] addGlobalAttributeWithContent:attributed font:self.font];
+ 	
+ 设置文本的全局属性，比如行距，字体大小，默认颜色。当然后面可以对文本进行再次的加工
+ 
+ 	[attributed addAttribute:NSFontAttributeName value:[UIFont systemFontOfSize:30] range:NSMakeRange(10, 5)];
+    
+   	 [attributed addAttribute:NSForegroundColorAttributeName value:[UIColor greenColor] range:NSMakeRange(5, 10)];
+
+
+#####5 根据前面的材料生产得到最终渲染的全部属性材料
+ 
+	CTFramesetterRef framesetter =CTFramesetterCreateWithAttributedString((CFAttributedStringRef)attributed);
+	
+先用之前的AttributeString创建CTFramesetterRef
+
+	CTFrameRef ctFrame = CTFramesetterCreateFrame(framesetter, CFRangeMake(0, attributed.length), path, NULL);
+    
+再用上面创建的frameRef以及path作为参数创建得到最后的渲染的frame
+
+#####6 绘制
+	CTFrameDraw(ctFrame, contextRef);
+    
+#### 图文混排
+
+---
+
+从纯文本的排版到图文混排，需要知道的是整个文本的结构。
+
+ * CTLine:每一行的文本
+ * CTRun：每一行不同的属性的文本
+
+
+如何实现图文混排呢？其实就是先用一个占位符填充到需要显示图片的位置，并设置这个空白占位符的宽高等。当图片下载或者从本地读取之后就使用平时渲染Image的方式渲染到对应的地方。
+从代码中可以知道对于**本地**以及**网络**上的图片，设置占位符的方式是不一样的。**本地**的直接使用**空格**作为占位符，但是**网络**的就需要使用**0xfffc**。最后都是通过遍历整个文本的CTRun来得到图片的位置，根据这个CTRun的属性使用**CGContextDrawImage**进行渲染。
+
+
 
 ##2015-10-08
 
@@ -14,7 +139,7 @@ some article about programm.
  * 原文地址[f*ck GFW](http://kittenyang.com/webview-javascript-bridge/)
 
 记得以前刚开始的CRM系统也是使用JS来开发的。当时自己也是尝试解决原生与JS之间的交互问题，但是效果还不是很理想。思路其实也是跟当前博主的思路一样的， 可惜当时自己的能力与任务繁重问题导致没有更好地去解决。
- 曾记得，之前微博也是转发了一个第三方库用来解决原生与JS之间的深度交互，需要找找。**最后也是暴露了自己需要找个时间来学习前段才可以了。**
+ 曾记得，之前微博也是转发了一个第三方库用来解决原生与JS之间的深度交互，需要找找。**最后也是暴露了自己需要找个时间来学习前端开发才可以了。**
 
 
 =======
