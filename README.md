@@ -72,7 +72,7 @@ some article about programm.
 
 #####2 切换坐标系
 	CGContextSetTextMatrix(contextRef, CGAffineTransformIdentity);
-因为coreGraphics的原点是在左下角，coretext的是在左上角。因此，要对画布用当前的矩阵进行翻转坐标系。
+因为coreGraphics的原点是在左下角，coretext的是在左上角。因此，要对画布用当前的矩阵进行翻转坐标系。在代码中我们可以log出每个CTRun的rect.origin.y就可以知道是从最底部开始draw到最顶部的。
 	
 	CGContextTranslateCTM(contextRef, 0, self.bounds.size.height);
 将当前的画布的原点平移到**{0，self.bounds.size.height}**
@@ -123,7 +123,7 @@ some article about programm.
 
 
 如何实现图文混排呢？其实就是先用一个占位符填充到需要显示图片的位置，并设置这个空白占位符的宽高等。当图片下载或者从本地读取之后就使用平时渲染Image的方式渲染到对应的地方。
-从代码中可以知道对于**本地**以及**网络**上的图片，设置占位符的方式是不一样的。**本地**的直接使用**空格**作为占位符，但是**网络**的就需要使用**0xfffc**。最后都是通过遍历整个文本的CTRun来得到图片的位置，根据这个CTRun的属性使用**CGContextDrawImage**进行渲染。
+从代码中可以知道对于**本地**以及**网络**上的图片，设置占位符的方式是不一样的。**本地**或者**网络**的使用**" "**作为占位符，也可以使用**0xfffc**。最后都是通过遍历整个文本的CTRun来得到图片的位置，根据这个CTRun的属性使用**CGContextDrawImage**进行渲染。
 
 
 
