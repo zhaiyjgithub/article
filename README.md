@@ -3,6 +3,8 @@ some article about programm.
 ***
 ##2015-11-07
 
+![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/20151107.jpg) 
+
 ### coreText框架学习
 
 > 学习coreText，让我想起了大学那段学习液晶屏幕驱动显示的时光。
@@ -17,7 +19,7 @@ some article about programm.
  
 #####组成架构
  
-![coreText架构](/Users/admin/Desktop/coreText架构.png)
+![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/coreTextArchi.png) 
 
 #####coteText与WebView在排版的差异
 
@@ -125,6 +127,15 @@ some article about programm.
 如何实现图文混排呢？其实就是先用一个占位符填充到需要显示图片的位置，并设置这个空白占位符的宽高等。当图片下载或者从本地读取之后就使用平时渲染Image的方式渲染到对应的地方。
 从代码中可以知道对于**本地**以及**网络**上的图片，设置占位符的方式是不一样的。**本地**或者**网络**的使用**" "**作为占位符，也可以使用**0xfffc**。最后都是通过遍历整个文本的CTRun来得到图片的位置，根据这个CTRun的属性使用**CGContextDrawImage**进行渲染。
 
+####调整文本高度
+
+![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/word.png) 
+
+	* 根据文本保持baseLined对齐，高度是根据每一行的CTRun的属性确定。在代码中，第一行是不需要计算文本对齐的，而是从第二行开始的。
+	* 根据文本自定义高度，实现整个文本的统一高度
+	
+####实现文本的点击交互
+	思路:为这个view添加手势事件，然后通过手势获取当前屏幕的**点击点的位置**。然后，在这个手势事件中使用正则表达式来获取整个文本中会出发点击事件的**文本块**，最后通过匹配**点击点的位置**与**文本块**，**点**是否落在某个**文本块**中，最后对具体的**块**做出相应的事件出发
 
 
 ##2015-10-08
