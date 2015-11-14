@@ -3,7 +3,7 @@ some article about programm.
 ***
 ##2015-11-07
 
-![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/20151107.jpg) 
+![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/encourage.jpg) 
 
 ### coreText框架学习
 
