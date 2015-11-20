@@ -1,6 +1,35 @@
 # article
 some article about programm.
 ***
+
+##2015-11-20
+
+> have fun with coreImage and GPUImage.
+
+###添加GPUImage
+
+ * git clone [GPUImage](https://github.com/BradLarson/GPUImage.git)
+ * 将这个项目拷贝到工程的目录下
+ 	![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/20151120gpuimage.png)
+ * 打开项目的framework目录，将**GPUImage.xcodeproj**直接拉到工程中
+ ![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/20151120project.png) 
+ * 文档工程中，选择TARGETS--Build Phases--Target Dependencies--点击**+**加号添加**GPUImage**,**注意图片是白色的小房子**
+ * 继续同一个页面下面，Link Binary With Libraries添加图中相对应的静态库
+ ![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/20151120lib.png)
+ * 指定**库的路径**。选择PROJECT-Build Setting--搜索:**Header Search Paths**,双击后面的路径。点击加号。填上**framework/Source**的**绝对路径**或者**相对路径**，最后点击选择**recursive**。使用**相对路径**，则填上**$(SRCROOT)/masonry/lib/GPUImage/framework/Source**,最后点击选择**recursive**.**$(SRCROOT)**就是你工程最顶层的目录。
+ ![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/20151120path.png)
+ * 最后，在工程的ViewController.m添加**#import "GPUImage.h"**。And run这个工程。
+ 
+###测试GPUImage
+
+ 
+	GPUImageSepiaFilter *filter = [[GPUImageSepiaFilter alloc] init];
+    self.catImageView.image = [filter imageByFilteringImage:[UIImage imageNamed:@"cat.jpg"]]; 
+    
+###测试结果
+	
+	![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/20151120pcat.png)
+
 ##2015-11-07
 
 ![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/encourage.jpg) 
