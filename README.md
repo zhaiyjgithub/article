@@ -30,7 +30,7 @@ some article about programm.
     
 ###测试结果
 	
-![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/20151120pcat.png)
+![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/20151120cat.png)
 
 ##2015-11-07
 
