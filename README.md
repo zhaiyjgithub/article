@@ -30,7 +30,18 @@ some article about programm.
     
 ###测试结果
 	
-![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/20151120cat.png)
+![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/20151120result.png)
+
+### 根据GPUImage的demo学习滤镜
+	
+####拍照图片添加滤镜
+**SimplePhotoFilter**
+
+####视频录像添加滤镜
+**SimpleVideoFileFilter**，视频的文件可以使用Xcode直接读取沙盒的文件得到对应的录像文件。
+
+#####更多的学习可以直接在对应的github文件中获得。
+---
 
 ##2015-11-07
 
