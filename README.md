@@ -26,17 +26,6 @@ some article about programm.
  * 添加相应的库
  ![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/AlipaySDKLib.png)
  * 添加预编译文件.pch并指明pch文件的相对路径。文件包含了一下内容即可。关于pch自行了解
- 
-     #import <Availability.h>
- 	#ifndef __IPHONE_5_0
- 	#warning "This project uses features only available 	in iOS SDK 5.0 and later."
- 	#endif
- 	#ifdef __OBJC__
-     #import <UIKit/UIKit.h>
-     #import <Foundation/Foundation.h>
-     #endif
-
- 
  * 修改工程中的NSString *appScheme = @"alipayPayDemo"。也就是跟前面的保持一致的名字，一共有三个地方
  ![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/AlipaySchemes.png)
  * build一下，编译通过！！
