@@ -2,9 +2,65 @@
 some article about programm.
 ***
 
+##2016-01-06
+
+![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/AlipayTitle.jpg)
+
+> no pay , no gain.
+
+###支付宝集成
+
+####前言
+支付宝SDK的集成还是很简单的，之前觉得唯一的坎就是真正的商家key可以用,用之来验证真正的支付过程。最近刚好要搞支付，这下子爽了。下面就是集成步骤。
+
+ * 先到支付宝文档中心下载[SDK以及对应的demo](https://doc.open.alipay.com/doc2/detail?treeId=59&articleId=103563&docType=1)来看一下。先run一下demo感受一下，看一下工程的文件结构。这时候应该就有了一定的了解。
+ * 新建一个工程，然后打开SDK的demo工程所在的文件夹。把下面几个文件复制并放到新工程目录下的文件夹。
+  ![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/AlipaySDK.png)
+ * 在新工程中添加AlipaySDK文件夹的全部文件
+ * 在新工程中的Target-->Build setting-->搜索“Header search path”,填入AlipaySDK.framework在工程中的相对路径。
+   ![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/AlipaySDKpath.png)
+ * 在Target-->info-->URL Types-->添加一个type，如下图。记得在这里的URL Schemes的内容你可以填入任意值，当时需要在下面地方保持一致。否则会导致APP跳入到支付宝而无法返回应用。
+ ![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/AlipaySDKURLType.png)
+ * 在新工程的info.plist中添加如下。注意 URL Schemes 要与刚才的URL Types的URL Schemes的保持一致。如下图
+ ![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/AlipaySDKInfo.png)
+ * 添加相应的库
+ ![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/AlipaySDKLib.png)
+ * 添加预编译文件.pch并指明pch文件的相对路径。文件包含了一下内容即可。关于pch自行了解
+ 
+     #import <Availability.h>
+ 	#ifndef __IPHONE_5_0
+ 	#warning "This project uses features only available 	in iOS SDK 5.0 and later."
+ 	#endif
+ 	#ifdef __OBJC__
+     #import <UIKit/UIKit.h>
+     #import <Foundation/Foundation.h>
+     #endif
+
+ 
+ * 修改工程中的NSString *appScheme = @"alipayPayDemo"。也就是跟前面的保持一致的名字，一共有三个地方
+ ![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/AlipaySchemes.png)
+ * build一下，编译通过！！
+ * 这时候，仿照SDK demo的APViewcontroller.m中添加一个支付方法，填入自己的三个key再run并完成支付。
+ ![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/AlipayKey.png)
+ 
+ #### 整体项目结构
+ ![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/AlipaySDKArchi.png)
+ 
+ ####总结
+ 集成过程中，由于一直没有使用pch文件包含基本的 <UIKit/UIKit.h>，<Foundation/Foundation.h>导致编译出错。其他都是一次性完成。
+
+
+
+
+
 ##2015-11-20
 
+![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/GPUImage.jpg)
+
+
 > have fun with coreImage and GPUImage.
+
+## GPUImage
 
 ###添加GPUImage
 
