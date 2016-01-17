@@ -1,6 +1,332 @@
 # article
 some article about programm.
 ***
+
+##20160116
+
+>For one kiss,I would defy a thousand Wessexes
+
+###使用贝塞尔曲线制作可伸缩视图动画(译文)
+原文链接[Elastic view with animation using UIBezierPath](http://iostuts.io/2015/10/17/elastic-bounce-using-uibezierpath-and-pan-gesture/)
+
+###最终效果!
+该篇教程的最终效果以及[代码](https://github.com/gontovnik/DGElasticPullToRefresh)
+![效果图](http://iostuts.io/content/images/2015/10/DGElasticPullToRefresh1.gif)
+
+###教程的开发要求
+
+* Xocde7
+* swfit2
+* 贝塞尔曲线以及滑动手势事件的基本知识以及理解
+
+###理解逻辑
+就像你的大概理解一样，我们主要是使用贝塞尔曲线的技巧来实现。我们先通过贝塞尔曲线创建一个CAShapeLayer。贝塞尔曲线上面有7个控制点，通过手指的滑动来改变控制点的位置，时刻改变CAShapeLayer的形状。每个控制点用一个可见的视图来代表着。下面图片上的红色点就是控制点的具体位置。为了达到该目的，我们在工程中使用iCADDispalyLink定时器来在主线程RunLoop的每一帧中执行更新贝塞尔曲线。	
+
+![初始位置](http://iostuts.io/content/images/2015/10/ControlPoints1.png)
+![拉伸过程中](http://iostuts.io/content/images/2015/10/ControlPoints2.png)
+
+当我们释放手指之后，图层就会以一个弹性动画回到初始位置。为了可以给图层添加动画，我们需要及时更新贝塞尔曲线
+
+###开始编写代码
+建立一个工程并粘贴下面的代码到类的声明中
+
+
+			private let minimalHeight: CGFloat = 50.0  
+			private let shapeLayer = CAShapeLayer()
+		
+		// MARK: -
+		
+			override func loadView() {  
+		    	super.loadView()
+
+		    shapeLayer.frame = CGRect(x: 0.0, y: 0.0, width: view.bounds.width, height: minimalHeight)
+		    shapeLayer.backgroundColor = UIColor(red: 57/255.0, green: 67/255.0, blue: 89/255.0, alpha: 1.0).CGColor
+		    view.layer.addSublayer(shapeLayer)
+		
+		    view.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: "panGestureDidMove:"))
+			}
+		
+			func panGestureDidMove(gesture: UIPanGestureRecognizer) {  
+		    		if gesture.state == .Ended || gesture.state == .Failed || gesture.state == .Cancelled {
+		
+		    	} else {
+		        	shapeLayer.frame.size.height = minimalHeight + max(gesture.translationInView(view).y, 0)
+		    	}
+		    }
+		
+			override func preferredStatusBarStyle() -> UIStatusBarStyle {  
+		    return .LightContent
+	}
+
+上面代码做了些什么?
+* 定义了两个变量，**shapeLayer**用来结合贝塞尔曲线的显示层。**minimalHeight**用来表示**shapeLayer**的最小高度 
+* 添加 一个 shape layer到 主视图的view
+* 为主视图添加滑动手势
+* 为屏幕的滑动添加一个手势事件的方法**panGestureDidMove**，用来时刻改变着shape layer的高度
+* 重写preferredStatusBarStyle方法来定义状态栏的颜色变成白色。
+
+接下来run一下我们的工程，最终效果就是这样
+
+![效果](http://iostuts.io/content/images/2015/10/Builds1.gif)
+
+它的确跟我们想要的那样运行，但是除了一样东西。图层高度的变化伴随着一个延时动画，出现的原因是因为图层的隐式动画。我们可以直接关闭这些隐式动画。只需要将下面的代码添加在shape layer添加到主视图的图层之前即可关闭关于position，bounds和path的隐式动画。
+
+	shapeLayer.actions = ["position" : NSNull(), "bounds" : NSNull(), "path" : NSNull()]  
+	
+重新run一下工程
+![](http://iostuts.io/content/images/2015/10/Builds2.gif)
+
+接下来我们需要做的是就是添加控制点视图(L3, L2, L1, C, R1, R2, R3,).OK，我们一步一步来。
+
+ *定义波峰的最大高度变量：maxWaveHeight
+
+	private let maxWaveHeight: CGFloat = 100.0 
+	
+我们定义并使用该变量的唯一原因就是为了使得波形变得更好看。如果我们没有定义波峰的最大高度，那么波形就会变得太大而且太难看。
+
+ * 定义下面这些控制点的视图
+
+	private let l3ControlPointView = UIView()  
+	private let l2ControlPointView = UIView()  
+	private let l1ControlPointView = UIView()  
+	private let cControlPointView = UIView()  
+	private let r1ControlPointView = UIView()  
+	private let r2ControlPointView = UIView()  
+	private let r3ControlPointView = UIView()
+	
+* 定义这些控制点的视图大小以及颜色(比如使用红色，是为了在前期调试可以更好容易辨识，在教程的最后，我们就隐藏这些控制点)。并在**loadView()**方法中添加下面这些代码
+
+	l3ControlPointView.frame = CGRect(x: 0.0, y: 0.0, width: 3.0, height: 3.0)  
+	l2ControlPointView.frame = CGRect(x: 0.0, y: 0.0, width: 3.0, height: 3.0)  
+	l1ControlPointView.frame = CGRect(x: 0.0, y: 0.0, width: 3.0, height: 3.0)  
+	cControlPointView.frame = CGRect(x: 0.0, y: 0.0, width: 3.0, height: 3.0)  
+	r1ControlPointView.frame = CGRect(x: 0.0, y: 0.0, width: 3.0, height: 3.0)  
+	r2ControlPointView.frame = CGRect(x: 0.0, y: 0.0, width: 3.0, height: 3.0)  
+	r3ControlPointView.frame = CGRect(x: 0.0, y: 0.0, width: 3.0, height: 3.0)
+	
+	l3ControlPointView.backgroundColor = .redColor()  
+	l2ControlPointView.backgroundColor = .redColor()  
+	l1ControlPointView.backgroundColor = .redColor()  
+	cControlPointView.backgroundColor = .redColor()  
+	r1ControlPointView.backgroundColor = .redColor()  
+	r2ControlPointView.backgroundColor = .redColor()  
+	r3ControlPointView.backgroundColor = .redColor()
+	
+	view.addSubview(l3ControlPointView)  
+	view.addSubview(l2ControlPointView)  
+	view.addSubview(l1ControlPointView)  
+	view.addSubview(cControlPointView)  
+	view.addSubview(r1ControlPointView)  
+	view.addSubview(r2ControlPointView)  
+	view.addSubview(r3ControlPointView) 
+
+
+* 添加一个UIView的extension到ViewController的视图之前
+	
+	extension UIView {  
+	    func dg_center(usePresentationLayerIfPossible: Bool) -> CGPoint {
+	    if usePresentationLayerIfPossible, let presentationLayer = layer.presentationLayer() as? CALayer 	{
+	            return presentationLayer.position
+	        }
+	        return center
+	    }
+	}
+
+当你需要对一个UIView的位置改变添加动画时候，你需要访问这个view的frame。那么UIView.center方法会给予你view的最终位置的frame而不是当前值。为了达到这个目的我们将创建一个extension用来在我们需要的时候获取UIView.layer.presentationLayer的位置。关于presentationLayer的相关资料可以点击[这里](https://developer.apple.com/library/ios/documentation/GraphicsImaging/Reference/CALayer_class/#//apple_ref/occ/instm/CALayer/presentationLayer)
+
+
+* 定义 currentPath 方法
+
+	    private func currentPath() -> CGPath {  
+	    let width = view.bounds.width
+	
+	    let bezierPath = UIBezierPath()
+	
+	    bezierPath.moveToPoint(CGPoint(x: 0.0, y: 0.0))
+	    bezierPath.addLineToPoint(CGPoint(x: 0.0, y: l3ControlPointView.dg_center(false).y))
+	    bezierPath.addCurveToPoint(l1ControlPointView.dg_center(false), controlPoint1: l3ControlPointView.dg_center(false), controlPoint2: l2ControlPointView.dg_center(false))
+	    bezierPath.addCurveToPoint(r1ControlPointView.dg_center(false), controlPoint1: cControlPointView.dg_center(false), controlPoint2: r1ControlPointView.dg_center(false))
+	    bezierPath.addCurveToPoint(r3ControlPointView.dg_center(false), controlPoint1: r1ControlPointView.dg_center(false), controlPoint2: r2ControlPointView.dg_center(false))
+	    bezierPath.addLineToPoint(CGPoint(x: width, y: 0.0))
+	
+	    bezierPath.closePath()
+	
+	    return bezierPath.CGPath
+	}
+
+这个方法是用来返回当前的shape layer的CGPath。它的形状是依赖于控制点的位置。
+
+* 定义updateShapeLayer 方法
+
+	func updateShapeLayer() {  
+    	shapeLayer.path = currentPath()
+	}
+	
+这个方法用来更新shape layer。它不是一个私有的方法，因为它将被CADisplayLink 定时器添加 Seletor() 方法。
+
+* 定义 layoutControlPoints 方法
+
+		private func layoutControlPoints(baseHeight baseHeight: CGFloat, waveHeight: CGFloat, locationX: CGFloat) {  
+	    let width = view.bounds.width
+	
+	    let minLeftX = min((locationX - width / 2.0) * 0.28, 0.0)
+	    let maxRightX = max(width + (locationX - width / 2.0) * 0.28, width)
+	
+	    let leftPartWidth = locationX - minLeftX
+	    let rightPartWidth = maxRightX - locationX
+	
+	    l3ControlPointView.center = CGPoint(x: minLeftX, y: baseHeight)
+	    l2ControlPointView.center = CGPoint(x: minLeftX + leftPartWidth * 0.44, y: baseHeight)
+	    l1ControlPointView.center = CGPoint(x: minLeftX + leftPartWidth * 0.71, y: baseHeight + waveHeight * 0.64)
+	    cControlPointView.center = CGPoint(x: locationX , y: baseHeight + waveHeight * 1.36)
+	    r1ControlPointView.center = CGPoint(x: maxRightX - rightPartWidth * 0.71, y: baseHeight + waveHeight * 0.64)
+	    r2ControlPointView.center = CGPoint(x: maxRightX - (rightPartWidth * 0.44), y: baseHeight)
+	    r3ControlPointView.center = CGPoint(x: maxRightX, y: baseHeight)
+		}
+
+在这里我们需要对方法内的定义的变量做出一些解释
+	1 **baseHeight** - 这是一个基础的layer高度。baseHeight + waveHeight = 整个shape layer的高度
+	2 **waveHeight** - 曲线的波形高度。这个高度不能超过之前定义的最大波形高度**maxWaveHeight**。否则波形将会很难看
+	3 **locationX** - 在屏幕上手指触摸点的**X**坐标
+	4 **width** - 主视图的宽度
+	5  **mineLeftX** - 定义**l3ControlPointView**最小**x**坐标位置。这个变量的值可以少于0。因此shape layer在视觉上看起来更加好以及清晰。
+	6 **maxRightX** - 跟**mineLeftX**的作用相当
+	7 **leftPartWidth** - 定义**mineLeftX** 和 **locationX**之间的距离
+	8 **rightPartWidth** - 定义**locationX** 与 **maxRightX**之间的距离
+	
+在这里，你可能会问控制点的位置为什么使用这些参数值。答案其实很简单:我使用**paintCode**
+来经过多次模拟贝塞尔曲线来得到的。当我发现我需要的这些值之后，我就将他们放到代码中并多次模拟曲线直到获取最佳点的值。
+
+* 接下来更新 **panGestureDidMove**方法，因此控制点的位置将跟随这手指触摸点的位置。用下面的代码覆盖原来方法的代码
+
+		func panGestureDidMove(gesture: UIPanGestureRecognizer) {  
+	   	 if gesture.state == .Ended || gesture.state == .Failed || gesture.state == .Cancelled {
+	
+	   	 } else {
+	      	  let additionalHeight = max(gesture.translationInView(view).y, 0)
+	
+	        let waveHeight = min(additionalHeight * 0.6, maxWaveHeight)
+	        let baseHeight = minimalHeight + additionalHeight - waveHeight
+	
+	        let locationX = gesture.locationInView(gesture.view).x
+	
+	        layoutControlPoints(baseHeight: baseHeight, waveHeight: waveHeight, locationX: locationX)
+	        updateShapeLayer()
+	    }
+		}
+
+我们需要做的是计算波形的高度，基本高度，手指的位置以及调用**layoutControlPoints**方法重新来设置控制点的位置并调用**updateShapeLayer**方法及时更新shape layer的形状。
+
+*添加这两行代码到**loadView()**方法的结尾处。因此在我们打开该APP之后我们就先更新一次shape layer。
+
+	layoutControlPoints(baseHeight: minimalHeight, waveHeight: 0.0, locationX: view.bounds.width / 2.0)  
+	updateShapeLayer()  
+
+* 改变shape layer的backgroundColor:
+
+		shapeLayer.backgroundColor = UIColor(red: 57/255.0, green: 67/255.0, blue: 89/255.0, alpha: 1.0).CGColor
+
+* 改变填充颜色
+
+		shapeLayer.fillColor = UIColor(red: 57/255.0, green: 67/255.0, blue: 89/255.0, alpha: 1.0).CGColor
+
+
+重新run一次工程并得到下面的效果
+	
+![](http://iostuts.io/content/images/2015/10/Builds3.gif)
+
+
+剩下最后一件事就是当我们释放手指之后添加弹动动画
+
+OK，我们一步一步来完成这些。
+
+* 定义 **displayLink** 变量
+
+		private var displayLink: CADisplayLink!
+
+* 然后在**loadView()**方法中初始化这个定时器
+
+		displayLink = CADisplayLink(target: self, selector: Selector("updateShapeLayer"))  
+		displayLink.addToRunLoop(NSRunLoop.mainRunLoop(), forMode: NSDefaultRunLoopMode)  
+		displayLink.paused = true
+
+就像教程前面提到一样。我们的在系统RunLoop，更新每一帧就会通过CADisplayLink来调用**updateShapeLayer**方法来及时更新shape layer 形状
+
+* 定义 **animating** 变量
+
+			private var animating = false {  
+		    didSet {
+		        view.userInteractionEnabled = !animating
+		        displayLink.paused = !animating
+		    }
+		}
+
+它用来打开或者关闭主视图的交互功能以及displayLink定时器。
+
+* 更新 **currentPath** 方法。因此**dg_center(Bool)**在调用的时候会使用上面定义的**animating**变量
+
+			private func currentPath() -> CGPath {  
+		    let width = view.bounds.width
+		
+		    let bezierPath = UIBezierPath()
+		
+		    bezierPath.moveToPoint(CGPoint(x: 0.0, y: 0.0))
+		    bezierPath.addLineToPoint(CGPoint(x: 0.0, y: l3ControlPointView.dg_center(animating).y))
+		    bezierPath.addCurveToPoint(l1ControlPointView.dg_center(animating), controlPoint1: l3ControlPointView.dg_center(animating), controlPoint2: l2ControlPointView.dg_center(animating))
+		    bezierPath.addCurveToPoint(r1ControlPointView.dg_center(animating), controlPoint1: cControlPointView.dg_center(animating), controlPoint2: r1ControlPointView.dg_center(animating))
+		    bezierPath.addCurveToPoint(r3ControlPointView.dg_center(animating), controlPoint1: r1ControlPointView.dg_center(animating), controlPoint2: r2ControlPointView.dg_center(animating))
+		    bezierPath.addLineToPoint(CGPoint(x: width, y: 0.0))
+		
+		    bezierPath.closePath()
+		
+		    return bezierPath.CGPath
+		}
+
+* 最后一步就是更新**panGestureDidMove**方法。用下面的代码覆盖之前的代码
+
+			if gesture.state == .Ended || gesture.state == .Failed || gesture.state == .Cancelled {  
+		    let centerY = minimalHeight
+		
+		    animating = true
+		    UIView.animateWithDuration(0.9, delay: 0.0, usingSpringWithDamping: 0.57, initialSpringVelocity: 0.0, options: [], animations: { () -> Void in
+		        self.l3ControlPointView.center.y = centerY
+		        self.l2ControlPointView.center.y = centerY
+		        self.l1ControlPointView.center.y = centerY
+		        self.cControlPointView.center.y = centerY
+		        self.r1ControlPointView.center.y = centerY
+		        self.r2ControlPointView.center.y = centerY
+		        self.r3ControlPointView.center.y = centerY
+		        }, completion: { _ in
+		            self.animating = false
+		    })
+		} else {
+		    let additionalHeight = max(gesture.translationInView(view).y, 0)
+		
+		    let waveHeight = min(additionalHeight * 0.6, maxWaveHeight)
+		    let baseHeight = minimalHeight + additionalHeight - waveHeight
+		
+		    let locationX = gesture.locationInView(gesture.view).x
+		
+		    layoutControlPoints(baseHeight: baseHeight, waveHeight: waveHeight, locationX: locationX)
+		    updateShapeLayer()
+		}
+
+在方法中我们添加了一个弹簧动画到每一个控制点视图，在它每次返回到初始化位置的过程中都得到了非常漂亮的过渡过程。通过不停地调试这些动画参数，或者你可以得到一个更加漂亮的的动画效果。
+
+重新run一下工程就会得到下面amazing效果：
+	![](http://iostuts.io/content/images/2015/10/Builds4.gif)
+	
+
+这次最后的最后就是将每个控制点的位置backgroundColor为透明颜色即可。
+
+![](http://iostuts.io/content/images/2015/10/Builds5.gif)
+
+
+####OK，完成到此结束。enjoy！
+
+---
+
+
 ##2016-01-11
 
 >I want to be a model
