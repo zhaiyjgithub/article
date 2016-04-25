@@ -4,7 +4,224 @@ some article about programm.
 
 ##20160228
 
+##React与webpack入门
+
+![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/webpack.jpg) 
+
+>No matter how long night, the arrival of daylight Association.
+
+是的，我正在学习开发前端呢，时间将近一个多月了，但是都是晚上的时间(**白天都在写iOS，偶尔关注前端开发**)。为什么我会开始学习前端呢？首先，记得15年刚开始搞iOS开发，当时在公司一个OA项目有部分
+功能是使用**webview**实现的。当时也是搞了一个礼拜，但是还是没有得到想要的效果。最后
+我立马使用使用原生花费2个礼拜的时间全转了原生了。这个经历一直留在我的心中但是经过最近
+一段时间才认真解决了原生与web交互的问题，也就是上一篇文章。同样地，在这个时间我学习了
+HTML，CSS以及基本的JS，突然间发现前端也是很好玩的样子喔。。。。就开始制定学习计划(其实就是到知乎上面看大牛分享学习路线之后然后总结得到自己的学习路线)继续搞前面提到的知识，然后到jQuery学习jQuery和jQuery UI的。jQuery UI只是学习了一小部分吧，主要感觉它有点丑了。但是jQuery比较
+喜欢，就是各种写小demo来测试学习吧，其中同时继续学习CSS基础知识。**接着，感觉越来越好了。。。**
+	最近一个礼拜比较空闲，然后看了一下现在比较流行的三种框架:**Ng,Vue,React**。**Ng**很多人都是说它很重很大，作为刚入门的我先不打算它。**Vue**很轻量级，也在官网上面看了一下tutorial教程，简单容易上手，比较适合自己，重要的一点我很喜欢作者**尤老师**。再看**React**，很多人都说它的特色是**组件化**,同样地在官网的**getting start**这些tutorial来学习。在WS上面把玩一下，我马上发现**它就是我的菜了**。为什么，因为**组件化**就跟我平时**iOS开发自定义控件**方式很接近。接下来更具tutorial中的完整例子学习了**单向数据流**以及**组件间传值**等，对于其中**子组件传值到父组件使用注册的回调方法更加类比于我平时iOS开发的cell通过block传值到View Controller**，这些特点**一下子点爆了自己**。
+	然后我在这个礼拜把官网的**getting start**的tutorial都玩一遍。我发现这样的组件化还不够好，必须继续学习一下工具来辅助开发才能更加提高效率。然后我就学习webpack，用它来**强化组件化**。
+	好吧，不扯那么多，快快开始我们今天属于自己的 **Tutorial of React + webpack**吧!
+
+### 安装npm
+	
+登录[node.js官网](https://nodejs.org/en/)下载安装包，我使用最新的stable version.
+安装之后，打开terminal敲一下**npm**命令，试一下。
+
+###安装全局webpack
+在terminal敲: **npm install webpack -g**
+
+###新建工程
+
+* 建立一个工程(我使用的是WebStorm)，目录架构如下:
+
+		|- app
+		    |- main.js
+		|- build
+		    |- index.html
+		|- components
+		|- webpack.config.js
+	
+在终端cd到当前工程的根目录下,执行npm：**npm init**。之后就在根目录下生成一个package.json文件
+这个文件包含了工程的基本信息，还会包含你的一些依赖信息，比如加载器有哪些。还可以添加执行的脚本，用于工程自动执行，后面就会说到。
+目录变成了:
+
+	|- app
+	    |- main.js
+	|- build
+	    |- index.html
+	|- components
+	|- package.json
+	|- webpack.config.js
+
+* 配置webpack.config.js文件，在该文件中填写下面这些内容：
+
+		var path = require('path');
+		module.exports = {
+			entry: path.resolve(__dirname, 'app/main.js'),
+			output: {
+	    	path: path.join(__dirname, 'build'),
+	    	filename: 'bundle.js'
+	    	},
+		}
+	
+**entry** : 指定打包的入口文件
+**output** : 指定打包后输出文件的路径以及文件
+
+同样cd到根目录，执行: **webpack**。根目录下就会生成上面指定的输出文件:**build/bundle.js**。
+
+添加相关加载器以及依赖包:**CSS**,**JSX**,**React**。分别执行命令:
+
+**npm install jsx-loader css-loader style-loader --save-dev **
+**npm install react react-dom --save-dev**.同样地，如果想要添加**jQuery**，替换 react即可。这些组件就会安装到当前工程的module文件夹下面。
+
+* 重新配置一下**webpack.config.js**文件:
+
+		var path = require('path');
+		module.exports = {
+			entry: path.resolve(__dirname, 'app/main.js'),
+			output: {
+				path: path.join(__dirname, 'build'),
+				filename: 'bundle.js'     },
+		    module: {
+		    		loaders: [{
+		    			test: /\.js|jsx$/,
+		    			loader: 'jsx?harmony'
+		    			}]
+		    		}
+	    }
+    
+在webpack.config.js文件当中，添加的modules包含了**jsx-loader**，也就是JSX加载器。如果在配置文件当中没有添加对应加载器的参数，后面在编译之后就会出现**You may need an appropriate loader to handle this file type.**相关的提醒。
+
+* 在工程中的**components**文件夹中新建一个组件，例如**BlackBoard.js**.
+
+		var React = require('react');
+		var BlackBoard = React.createClass({
+		render : function () {
+			return (<div>
+				Hello,Webpack,I am React!!
+				</div>);
+			}
+		});
+		module.exports = BlackBoard;
+
+* 然后回到**main.js**文件引用该组件:
+
+		var React = require('react');
+		var ReactDOM = require('react-dom');
+			var MessageBoard = require('../	component/BlackBoard.js');
+			ReactDOM.render(<MessageBoard />,
+			document.getElementById('container')
+		)
+
+* 最后回到**index.html**文件中，使用该组件:
+
+		<!DOCTYPE html>
+		<html lang="en">
+		<head>
+			<meta charset="UTF-8">
+			<title>ReactWebpack</title>
+		</head>
+		<body>
+			<div id="container"></div>
+			<script src="bundle.js"></script>
+		</body>
+		</html>
+
+cd到工程的根目录，执行:**webpack**进行编译打包。
+
+![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/webpack-command.png)
+
+然后run当前工程,效果是:
+
+![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/webpack-result.png)
+
+* 这里我发现只要我更改了我工程文件之后，需要重新执行**webpack**命令，从而进行编译输出。为了解决webpack可以**实时编译**问题，可以执行下面的方法:
+
+	* 在工程根目录下执行:**webpack --watch**.
+	* 在webpack.config.js最外层添加一个属性:**watch:true**.那么在第一次执行**webpack**命令之后，就会执行实时编译。
+
+上面的就是react+webpack最简单的使用流程了。当然，这里只是对自定义的组件实现了**webpack**加载，那么，如果想对CSS文件，图片等可以实现同样的组件化吗？是的，**webpack**就是为了解决问题而来的。这里，我就会觉得**React + webpack 就是天作之合**。
+
+好，同样地先安装对应的**loader**，执行:**npm install css-loader style-loader image-webpack-loader --save-dev**
+
+同样地在**webpack.config.js**中添加相对应的loader脚本:
+	
+	 var path = require('path');
+	module.exports = {
+		entry: path.resolve(__dirname, 'app/main.js'),
+		output: {
+		path: path.join(__dirname, 'build'),
+				filename: 'bundle.js'     },
+	    module: {
+	    loaders: [ {
+		    test: /\.css$/,
+		    loader: 'style-loader!css-loader'
+	    },{
+	    test: /\.(png|jpg)$/,
+		    loaders: [
+		    'file?hash=sha512&digest=hex&name=[hash].[ext]',
+		    'image-webpack?bypassOnDebug&optimizationLevel=7&interlaced=false'
+		    ]
+	    },{
+		    test: /\.js|jsx$/,
+		    loader: 'jsx?harmony'
+	    }]
+	   }
+    }
+
+
+在**app**文件夹下添加一个文件,**boardStyle.css**:
+
+	.BackgroundStyle{
+		width:200px;
+		height:100px;
+		background-color: #40a070;
+	}
+
+再回到**main.js**引入这个CSS组件:
+	
+	 var React = require('react');
+	var ReactDOM = require('react-dom');
+	var MessageBoard = require('../component/BlackBoard.js');
+		require('../app/boardStyle.css');//引入该组件
+		ReactDOM.render(<MessageBoard />,
+		document.getElementById('container')
+	)
+
+最后更改**index.html**文件，为当前组件添加一个样式:
+
+	<div id="container" class="BackgroundStyle"></div>
+	<script src="bundle.js"></script>
+
+重新执行**webpack**(如果你没有开启了实时编译)，重新run一下工程。
+
+![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/webpack-result-CSS.png) 
+
+到此，添加CSS组件流程完成了。如果需要插入图片的，使用同样的方法。但是要注意一点的是，根据当前
+的配置，webpack会对图片进行进行一定的压缩处理。从而得到一个名字经过Hash之后的文件名字，此时，
+我们可以保持引入图片的名字不变，但是路径执行压缩之后的图片的路径。这样就可以引用这个压缩后的图片了。
+
+其他技巧:
+
+* 我们引入一个组件或者文件的时候，需要指定它的所在路径，但是引入**React**这些组件的时候而不再使用添加具体的路径了。这个也让我产生了一些思考，后来我发现可以在**webpack.config.js**文件中添加
+	一个字段:
+	
+		alias:[componentName : "component path",.....],
+	
+**componetnName:** 组件的引入名字，引入时候直接: **require（'componetnName')**;即可。
+为什么要这样做呢？其实就是一些组件需要频繁地被引入，使用全局配置改组件的名称以及路径就可以减小
+webpack查找组建的时间，效率更高一些。
+
+###总结
+好了，今天的React+webpack的tutorial全部完成了。接下来我打算继续学习一下Flux和Redux，然后去到awesome-react上面的开源项目学习。说到这些，突然我发现了ant.design组件库，没错，又要点爆我了。
+哈哈，当初自己因为抱着**原生与JS交互**的问题不放，竟然走到了这里。
+我是否应该走上前端开发之路呢，我感觉它同样很有趣呀。不如，keep curious,passion!
+
+
+
+
 ## WebView与JavaScriptcore实践
+
+![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/javascriptCore.jpg) 
+
 >记得一个月前一位前端的朋友问我关于JavaScript如何调用iOS原生方法的问题。我当时我也不知道如何做，就推荐了kitten同学的博客文章[UIWebView与JS的深度交互](http://kittenyang.com/webview-javascript-bridge /).不过最近我也开始学习前端开发了，回头看了一下这个问题，也把这个问题解决并总结一下。希望可以让你得到一定帮助。
 
 
