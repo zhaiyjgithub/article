@@ -72,7 +72,9 @@ HTML，CSS以及基本的JS，突然间发现前端也是很好玩的样子喔�
 添加相关加载器以及依赖包:**CSS**,**JSX**,**React**。分别执行命令:
 
 **npm install webpack -save-dev**
+
 **npm install jsx-loader css-loader style-loader --save-dev **
+
 **npm install react react-dom --save-dev**.同样地，如果想要添加**jQuery**，替换 react即可。这些组件就会安装到当前工程的module文件夹下面。
 
 * 重新配置一下**webpack.config.js**文件:
