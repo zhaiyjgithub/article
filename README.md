@@ -2,6 +2,144 @@
 some article about programm.
 ***
 
+##20161204
+
+![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/20161204.jpg) 
+
+> Beauty provoketh thieves sooner than gold
+
+大半年没有写blog了，这半年也是太忙了。好吧！直接入正题，接下来我将会逐步更新关于**OpenGL ES**的入门教程。教程我是看了**OpenGL ES应用编程实践 iOS卷**的一遍之后，再次写的笔记。我认为经过多次阅读与实践，会等到更多的体会。内容相比书里面的内容会快而且精简一些，如果涉及一些概念，可以先阅读该书之后或者直接参考该书对应的章节。
+    今天是第一篇**绘制三角形**。
+
+###渲染、坐标系、缓存
+**渲染**：用3D数据生成一个2D图像的过程就是渲染。
+
+**坐标系**：在OpenGL ES中，坐标系是一个空间坐标系。它是符合右手定则。屏幕的中心点就是**原点**，屏幕中心点指向自己的方向就是**Y轴正方向**。屏幕的中心点并平行屏幕的**向右方向**就是**X轴正方向**。屏幕的中心点执行听筒并垂直**X轴**方向就是**Y轴正方向**。OpenGL ES坐标系的体验，可以在完成教程运行demo后，通过更新demo的坐标数组的数据并运行即可。另外，**OpenGL ES坐标系是没有单位表示的**。
+
+**缓存**：GPU能够控制和管理的连续RAM。GPU在处理缓存中的数据的同时，CPU的程序仍然是可以继续运行的。也就是，GPU和CPU是异步的。比如本教程中，三角形的顶点就是保存在缓存中，等到CPU发指令到GPU说要**渲染**的时候，GPU就会从缓存中读取数据并进行渲染。
+
+###准备工作
+
+先创建一个工程，打开**viewController.h**，加入**GLKit**的头文件，并将当前的VC继承自**GLKViewController**：
+  
+    #import <UIKit/UIKit.h>
+    #import <GLKit/GLKit.h>
+
+    @interface ViewController : GLKViewController
+    @end
+    
+然后打开**storyboard**,更改当前的**view**继承于**GLKView**。
+
+###代码分析
+打开viewcontroller.m，定义两个变量：
+
+    @interface ViewController ()
+    @property(nonatomic,assign)GLuint vertexBufferID;
+    @property(nonatomic,strong)GLKBaseEffect * baseEffect;
+    @end
+    
+**vertexBufferID**：在缓存中唯一的ID
+**vertexBufferID**：OpenGL ES提供最基本的shader effect
+
+    typedef struct {
+    GLKVector3 positionCoords; //使用OpenGL ES 内置的数据类型，这个是一个联合体union
+    }
+    SceneVertex;
+
+使用OpenGL ES 内置的数据类型来描述当前的**一个顶点**。这里为什么使用内置的数据类型呢？因为这样更加方便，可以直接进去看看**GLKVector3**的类型定义。里面是一个包含四个成员的结构体，而且刚好每个成员的包含了三个成员，比如第一个成员包含了**{ float x, y, z; }**三个成员。这三个成员刚好用来描述顶点坐标坐标在空间坐标系中的表示，更加方便我们的访问。
+
+    static const SceneVertex vertices[] = {
+    {{-0.5f, -0.5f, 0.0}}, // low er left corner
+    {{ 0.8f, -0.5f, 0.0}}, // lower right corner
+    {{-0.5f,  0.5f, 0.0}}  // upper left corner
+    };
+    
+根据上面的数据类型来定义一个数组，里面包含了三个顶点，刚好组成了一个**三角形**。你可以分析一下里面的顶点坐标，结合刚才OpenGL ES的空间坐标系，就知道三角形大概是怎样表示的了。
+
+     GLKView *view = (GLKView *)self.view;
+    NSAssert([view isKindOfClass:[GLKView class]],
+             @"View controller's view is not a GLKView");
+
+断言当前的view是不是**GLKView 类型**。
+
+     
+    view.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+    
+    [EAGLContext setCurrentContext:view.context];
+
+创建一个OpenGL ES2.0的上下文到当前的view。然后将view的上下文设置到当前的上下文。
+
+     
+    self.baseEffect = [[GLKBaseEffect alloc] init];
+    self.baseEffect.useConstantColor = GL_TRUE;
+    self.baseEffect.constantColor = GLKVector4Make(1.0, 1.0, 1.0, 1.0);
+
+创建一个基本的OpenGL ES 2.0 的effect 对象，并设置着色器使用基本的渲染颜色。
+
+     //设置当前context的背景颜色
+    glClearColor(0, 0, 0, 0);
+    
+    //获取一个独一无二的缓存ID
+    glGenBuffers(1, &(_vertexBufferID));
+    
+    //将这个buffer ID绑定到一个申请的buffer中
+    glBindBuffer(GL_ARRAY_BUFFER, _vertexBufferID);
+    
+    // 将顶点的数据保存在刚才申请的buffer中,因为当前的顶点数据
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    
+描述如注释。就是把上面定义的顶点数组数据保存在唯一标记的缓存中，以供后面GPU从缓存中读取数据并进行渲染到屏幕上。
+
+    //屏幕每帧都会自动调用这个方法，同update，view的渲染使用glkView
+    - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect{
+    
+        [self.baseEffect prepareToDraw];
+    
+        //清除buffer之前的数据
+        glClear(GL_COLOR_BUFFER_BIT);
+    
+        //使能从buffer读取顶点数据
+        glEnableVertexAttribArray(GLKVertexAttribPosition);
+    
+        //设置顶点的数据指针 sizeof(SceneVertex) = 12 个字节 
+        glVertexAttribPointer(GLKVertexAttribPosition, 3, GL_FLOAT, GL_FALSE,   sizeof(SceneVertex), NULL);
+    
+        //开始绘图
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
+    
+我们知道iPhone屏幕刷新的帧率60hZ，因为这是人眼识别的最好效果。超过了，就浪费资源，少了就会卡了。那么，GLKit刚好提供了一个跟帧率同步的代理方法：
+
+    //屏幕每帧都会自动调用这个方法，同update，view的渲染使用glkView
+    - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect{
+    
+        [self.baseEffect prepareToDraw];
+    
+        //清除buffer之前的数据
+        glClear(GL_COLOR_BUFFER_BIT);
+    
+        //使能从buffer读取顶点数据
+        glEnableVertexAttribArray(GLKVertexAttribPosition);
+    
+        //设置顶点的数据指针 sizeof(SceneVertex) = 12 个字节 
+        glVertexAttribPointer(GLKVertexAttribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(SceneVertex), NULL);
+    
+        //开始绘图
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
+
+
+**glEnableVertexAttribArray** ：里面的参数表示顶点。可以进去看这个枚举定义OpenGL ES已经帮我们已经定义好了描述顶点，向量，颜色，纹理等。我们直接使用内置的枚举成员即可。
+**glVertexAttribPointer**：第一个参数同上；第二个参数表示一个顶点包含了三个部分，就是**XYZ三个坐标点**；第三个参数表示坐标点的类型是浮点型的；第四个参数表示数组的顶点数据是否可以被改变的，本教程是不可改变的，那么就是false；第五个参数表示**步幅**，告诉GPU每次从缓存中读取一次数据获取多少个字节来表示一个完整的顶点数。而这里就是12个字节=步幅。为什么？因为一个float类型用4个字节来表示，64位系统为了兼容也是4个字节；最后一个参数表示数据读取从当前绑定的缓存的起点位置开始读取。
+**glDrawArrays**：开始绘图。第一个参数告诉GPU描绘三角形；第二个参数表示三角形第一顶点在缓存中的位置；第三个顶点表示模型有三个顶点；
+
+至此，我们先run一下工程，就会发现一个白色的三角形描绘在屏幕中间处（通过更改坐标系的坐标数据继续分析和体验OpenGL ES坐标系）。
+    
+
+###总结
+流程就是定义**三角形模型**数据，把数据保存到申请的缓存中。然后在代理方法中，执行读取缓存数据并把数据渲染到屏幕上。
+    
+
 ##20160425
 
 ##React与webpack入门
