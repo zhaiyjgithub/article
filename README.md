@@ -2,6 +2,213 @@
 some article about programm.
 ***
 
+##20161207
+本次的文章主要是封装上一章的代码，比如如缓存的申请、绑定和数据保存。这也是因为后面的教程都会在当前这份代码的基础上进行开发的。
+
+###上下文context的方法相关封装
+新建两个文件： **AGLKContext.h** 和**AGLKContext.m**
+头文件的内容：
+
+    #import <GLKit/GLKit.h>
+
+    @interface AGLKContext : EAGLContext
+
+    @property(nonatomic,assign)GLKVector4 clearColor;
+    - (void)clear:(GLenum)mask;
+    - (void)enable:(GLenum)capability;
+    - (void)disable:(GLenum)capability;
+
+    @end
+    
+.m文件的内容：
+
+    #import "AGLKContext.h"
+
+    @implementation AGLKContext
+    
+    
+    - (void)setClearColor:(GLKVector4)clearColor{
+        _clearColor = clearColor;
+        
+        glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+    }
+    
+    - (void)clear:(GLenum)mask{
+        glClear(mask);
+    }
+    
+    - (void)enable:(GLenum)capability{
+        glEnable(capability);
+    }
+    
+    - (void)disable:(GLenum)capability{
+        glDisable(capability);
+    }
+    @end
+    
+上面主要封装了context一些关于设置当前上下文背景颜色相关的代码。
+
+###封装缓存的申请和绑定相关
+新建两个文件： **AGLKVertexAttribArrayBuffer.h** 和 **AGLKVertexAttribArrayBuffer.m**
+
+头文件的内容：
+    
+    #import <Foundation/Foundation.h>
+    #import <GLKit/GLKit.h>
+    
+       typedef enum{
+           AGLKVertexAttribPosition = GLKVertexAttribPosition,
+           AGLKVertexAttribNormal = GLKVertexAttribNormal,
+           AGLKVertexAttribColor = GLKVertexAttribColor,
+           AGLKVertexAttribTexCoord0 = GLKVertexAttribTexCoord0,
+           AGLKVertexAttribTexCoord1 = GLKVertexAttribTexCoord1,
+       } AGLKVertexAttrib;
+       
+       @interface AGLKVertexAttribArrayBuffer : NSObject
+       @property(nonatomic,assign)GLsizei stride; //步幅
+       @property(nonatomic,assign)GLsizeiptr bufferSizeBytes; //顶点等缓存数据指针
+       @property(nonatomic,assign)GLuint name;//缓存ID
+       
+       - (id)initWithAttribStride:(GLsizei)aStride numberOfVertices:(GLsizei)count bytes:(const GLvoid *)dataPtr usage:(GLenum)usage;
+       - (void)reinitWithAttribStride:(GLsizei)aStride numberOfVertices:(GLint)count bytes:(const GLvoid *)dataPtr;
+       - (void)prepareToDrawWithAttrib:(GLint)index numberOfCoordinates:(GLint)numberOfCoordinates attribOffset:(GLsizeiptr)offset shouldEnable:(BOOL)shouleEnable;
+       - (void)drawArrayWithMode:(GLenum)mode startVertexIndex:(GLint)first numberOfVertices:(GLint)count;
+       @end
+    
+    上面的代码枚举了原来内置的GLKVertexAttrib作为区分，并定义**stride**、**bufferSizeBytes**、**name**等相关变量。
+    
+    .m文件的内容：
+    
+        #import "AGLKVertexAttribArrayBuffer.h"
+    
+    @implementation AGLKVertexAttribArrayBuffer
+    
+    
+    /**
+      把顶点数据保存到申请的缓存中
+    
+     @param aStride 步幅
+     @param count 顶点的个数
+     @param dataPtr 顶点坐标的数组
+     @param usage <#usage description#>
+     @return <#return value description#>
+     */
+    - (id)initWithAttribStride:(GLsizei)aStride numberOfVertices:(GLsizei)count bytes:(const GLvoid *)dataPtr usage:(GLenum)usage{
+    
+        if (self = [super init]) {
+            self.stride = aStride;
+            self.bufferSizeBytes = count * self.stride;
+            
+            glGenBuffers(1, &_name);
+            glBindBuffer(GL_ARRAY_BUFFER, self.name);
+            glBufferData(GL_ARRAY_BUFFER, self.bufferSizeBytes, dataPtr, usage);
+            
+            NSAssert(0 != self.name, @"failed to generate buffer name"); 
+        }
+        return self;
+    }
+    
+    
+    /**
+     重置当前绑定的缓存数据
+    
+     @param aStride <#aStride description#>
+     @param count <#count description#>
+     @param dataPtr <#dataPtr description#>
+     */
+    - (void)reinitWithAttribStride:(GLsizei)aStride numberOfVertices:(GLint)count bytes:(const GLvoid *)dataPtr{
+        self.stride = aStride;
+        self.bufferSizeBytes = count * self.stride;
+        
+        glBindBuffer(GL_ARRAY_BUFFER, self.name);
+        glBufferData(GL_ARRAY_BUFFER, self.bufferSizeBytes, dataPtr, GL_DYNAMIC_DRAW);
+    }
+    
+    
+    /**
+     使能坐标读取以及指定顶点坐标的组成等参数
+    
+     @param index <#index description#>
+     @param numberOfCoordinates <#numberOfCoordinates description#>
+     @param offset <#offset description#>
+     @param shouleEnable <#shouleEnable description#>
+     */
+    - (void)prepareToDrawWithAttrib:(GLint)index numberOfCoordinates:(GLint)numberOfCoordinates attribOffset:(GLsizeiptr)offset shouldEnable:(BOOL)shouleEnable{
+        glBindBuffer(GL_ARRAY_BUFFER, self.name);
+        
+        if (shouleEnable) {
+            glEnableVertexAttribArray(index);
+        }
+        
+        glVertexAttribPointer(index, numberOfCoordinates, GL_FLOAT, GL_FALSE, (self.stride), NULL + offset);
+    }
+    
+    
+    /**
+     绘制模型
+    
+     @param mode <#mode description#>
+     @param first <#first description#>
+     @param count <#count description#>
+     */
+    - (void)drawArrayWithMode:(GLenum)mode startVertexIndex:(GLint)first numberOfVertices:(GLint)count{
+        glDrawArrays(mode, first, count);
+    }
+    
+    @end
+
+**- (id)initWithAttribStride:(GLsizei)aStride numberOfVertices:(GLsizei)count bytes:(const GLvoid *)dataPtr usage:(GLenum)usage**：这个方法就是初始化步幅，顶点的数量，顶点数据的指针以及数据的使用方式。看改方法的内容可以知道里面就是使用传递进来的参数申请缓存ID和把顶点数据保存到缓存中。
+
+**- (void)reinitWithAttribStride:(GLsizei)aStride numberOfVertices:(GLint)count bytes:(const GLvoid *)dataPtr**：重置缓存中的数据。这是为了以后使用，当前工程中并没有使用改方法。
+
+**- (void)prepareToDrawWithAttrib:(GLint)index numberOfCoordinates:(GLint)numberOfCoordinates attribOffset:(GLsizeiptr)offset shouldEnable:(BOOL)shouleEnable**：准备绘制模型数据之前的准备工作。里面的内容就是上一个工程的代码，在绘制代理方法中关于绘制前准备代码的封装
+
+**- (void)drawArrayWithMode:(GLenum)mode startVertexIndex:(GLint)first numberOfVertices:(GLint)count**：绘制模型。指定绘制的起始点和顶点的数量。
+
+###引入并调用
+回到**viewDidLoad**方法中，调用的方式如下：
+    
+    - (void)viewDidLoad {
+        [super viewDidLoad];
+        
+        GLKView * view = (GLKView *)self.view;
+        NSAssert([view isKindOfClass:[GLKView class]], @"view controller`s view is not glkView");
+        
+        view.context = [[AGLKContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+        [AGLKContext setCurrentContext:view.context];
+        
+        self.baseEffect = [[GLKBaseEffect alloc] init];
+        self.baseEffect.useConstantColor = GL_TRUE;
+        self.baseEffect.constantColor = GLKVector4Make(1.0, 1.0, 1.0, 1.0);
+        
+        ((AGLKContext *)view.context).clearColor = GLKVector4Make(0.0, 0.0, 0.0, 1.0);
+        
+        self.vertexBuffer = [[AGLKVertexAttribArrayBuffer alloc]
+                             initWithAttribStride:sizeof(SceneVertex)
+                             numberOfVertices:sizeof(vertices)/sizeof(SceneVertex)
+                             bytes:vertices usage:GL_STATIC_DRAW];
+    
+    }
+
+对比上次的工程代码，你会发现只是修改了**context.clearColor**和**self.vertexBuffer的定义**。
+
+再看看绘制的代理方法：
+    
+    - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect{
+    [self.baseEffect prepareToDraw];
+    
+    [(AGLKContext *)view.context clear:GL_COLOR_BUFFER_BIT];
+    
+    [self.vertexBuffer prepareToDrawWithAttrib:GLKVertexAttribPosition numberOfCoordinates:3 attribOffset:offsetof(SceneVertex, positionCoors) shouldEnable:YES];
+    
+    [self.vertexBuffer drawArrayWithMode:GL_TRIANGLES startVertexIndex:0 numberOfVertices:3];
+    }
+    
+同样对比上次的工程代码。你会发现不同的是**步幅=attribOffset**使用了**offsetof(SceneVertex, positionCoors)**来获取**positionCoors在SceneVertex结构体中的偏移量**.在当前定义的结构体中我们可以知道**SceneVertex只有一个成员，那么偏移量就是0**。为什么使用这样的方式呢？**因为有些顶点的信息不单包含了顶点的三个空间坐标{x,y,z}，还可以包含其他的信息，比如下一章说道的纹理坐标{U,V}。如果包含了其他的坐标信息，那么当获取其他的坐标的信息时，传入的偏移量就不一样的了**。
+
+###总结
+本章内容主要是封装了**context**、**buffer**等相关代码。
+
 ##20161204
 
 ![](https://github.com/zhaiyjgithub/article/raw/master/titlePic/20161204.jpg) 
