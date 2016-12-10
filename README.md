@@ -1,6 +1,61 @@
 # article
-some article about programm.
+some article about program.
 ***
+
+##20161209
+本章开始学习一下**纹理**。之前渲染的三角形都是只有一种颜色，如果我们需要在三角形上面添加图片呢？
+
+概念：**纹理是一个用来保存图像的颜色元素值的OpenGL ES缓存。**当用一个图像初始化一个纹理缓存之后，在这个图像中的每个像素变成纹理中的一个**纹素**。纹素存在于一个没有单位的数学坐标系中，而且是只有正值**{S,T}坐标系。**。
+
+那么，前面我们指定的三角形坐标，如何从纹素中获取对应的纹素呢？这时候就需要用到**坐标映射**。只需要在定义三角形的顶点坐标的时候，同时指定纹素的映射坐标即可，在顶点指定的映射坐标系叫做**{U,V}坐标系。**
+
+上面的**{S,T}坐标系，{U,V}坐标系都是从左下角作为原点，上方为T，V轴，右方S，U轴。**
+
+###代码分析
+首先，我们从上面一个工程的基础上进行代码修改。
+####拓展顶点
+在前面已经讲到，需要在顶点坐标的定义，同时制定纹素的坐标。
+
+    typedef struct{
+        GLKVector3  positionCoords; //顶点坐标{x,y,z}
+        GLKVector2  textureCoords;//纹理映射坐标{u,v}
+    }
+    SceneVertex;
+
+首先重新定义顶点坐标结构体。
+
+    //定义包含映射到纹理的坐标
+    static const SceneVertex vertices[] ={
+        {{-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f}}, // lower left corner
+        {{ 0.5f, -0.5f, 0.0f}, {1.0f, 0.0f}}, // lower right corner
+        {{-0.5f,  0.5f, 0.0f}, {0.0f, 1.0f}}, // upper left corner
+    };
+    
+从上面拓展的坐标中，可以知道三个纹素坐标也构成了一个**三角形**。那么，每个纹素坐标对应于三角形每个顶点坐标。然后，OpenGL ES就会从纹理缓存中读取纹素渲染到三角形中对应的坐标位置中去。其实，**顶点的三角形和纹素坐标成的三角形是一个相似的三角形来的。**你会问，如果纹素组成的三角形的面积比顶点组成的三角形的面积少呢？也就是，纹素数量少于需要渲染的空间？这时候，就涉及了**采样算法了**。这个先留在下一章讲解。
+
+####生成纹理
+
+        //使用一章图片生成一个2D纹理
+    CGImageRef imageRef = [[UIImage imageNamed:@"leaves.gif"] CGImage];
+    GLKTextureInfo * textureInfo = [GLKTextureLoader textureWithCGImage:imageRef options:nil error:NULL];
+    //将纹理赋给baseEffect
+    self.baseEffect.texture2d0.name = textureInfo.name;
+    self.baseEffect.texture2d0.target = textureInfo.target;
+    
+回到viewDidLoad方法中，在最后添加上面的代码。首先，使用**GLKTextureLoader**将一张图片生成一个纹理对象**GLKTextureInfo。**然后将纹理赋值给baseEffect。
+
+####准备纹理坐标
+
+      //准备好纹理坐标
+    [self.vertexBuffer prepareToDrawWithAttrib:GLKVertexAttribTexCoord0 numberOfCoordinates:2 attribOffset:offsetof(SceneVertex, textureCoords) shouldEnable:YES];
+    
+
+然后来到**- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect**，在绘制之前添加上面的代码，上面的代码就是准备好纹理坐标。接下来，进行绘制三角形，然后OpenGL ES从纹素缓存中读取缓存并渲染到对应的位置中。
+
+#####总结
+拓展顶点的坐标，映射到纹理坐标中，获取对应位置的纹素渲染到顶点三角形中。最后得到一个有纹理的坐标。
+**尝试，同时更改顶点的{U,V}坐标，保持两个三角形相似性，看看最后的渲染的效果会怎样？最后，你会发现，顶点三角形就相当于一个窗口，移动{U,V}坐标就相当于窗口的位置，看到图片其他部分的颜色罢了。**
+
 
 ##20161207
 本次的文章主要是封装上一章的代码，比如如缓存的申请、绑定和数据保存。这也是因为后面的教程都会在当前这份代码的基础上进行开发的。
