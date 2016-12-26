@@ -2,6 +2,79 @@
 some article about program.
 ***
 
+##20161226
+本章将学习**多重纹理**
+
+很多有用的可视效果可以通过片元颜色（就是纹理）和在像素颜色渲染颜色缓存中现存的颜色相混合来实现。但是这个技术有两个主要的缺点：每次显示更新时，几何图形必须要被渲染一次或者多次，混合函数需要从像素颜色缓存中读取颜色数据以便与片元颜色混合，然后结果被写回帧混存。当带有透明度数据和多个纹理层叠时候，每个纹理的像素颜色渲染缓存的颜色就会被再次读取、混合、重写。其实这个效果就是**多通道渲染**。
+    当前CPU都是支持同时从至少两个纹理缓存中采样纹素。
+    
+####代码分析
+先回到viewDidLoad方法中的后面，增加一个新的纹理。
+
+    CGImageRef imageRef0 =
+    [[UIImage imageNamed:@"leaves.gif"] CGImage];
+    
+    GLKTextureInfo *textureInfo0 = [GLKTextureLoader
+                                    textureWithCGImage:imageRef0
+                                    options:[NSDictionary dictionaryWithObjectsAndKeys:
+                                             [NSNumber numberWithBool:YES],
+                                             GLKTextureLoaderOriginBottomLeft, nil]
+                                    error:NULL];
+    
+    self.baseEffect.texture2d0.name = textureInfo0.name;
+    self.baseEffect.texture2d0.target = textureInfo0.target;
+    
+    //添加纹理
+    CGImageRef imageRef1 =
+    [[UIImage imageNamed:@"beetle.png"] CGImage];
+    
+    GLKTextureInfo *textureInfo1 = [GLKTextureLoader
+                                    textureWithCGImage:imageRef1
+                                    options:[NSDictionary dictionaryWithObjectsAndKeys:
+                                             [NSNumber numberWithBool:YES],
+                                             GLKTextureLoaderOriginBottomLeft, nil] 
+                                    error:NULL];
+    
+    self.baseEffect.texture2d1.name = textureInfo1.name;
+    self.baseEffect.texture2d1.target = textureInfo1.target;
+    self.baseEffect.texture2d1.envMode = GLKTextureEnvModeDecal;
+
+**self.baseEffect.texture2d1.envMode = GLKTextureEnvModeDecal;**这里配置纹理的混合模式
+
+最后在准备渲染纹理坐标的时候，添加第二个纹理的坐标即可。
+
+    
+    - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
+    {
+        // Clear back frame buffer (erase previous drawing)
+        [(AGLKContext *)view.context clear:GL_COLOR_BUFFER_BIT];
+        
+        [self.vertexBuffer prepareToDrawWithAttrib:GLKVertexAttribPosition
+                               numberOfCoordinates:3
+                                      attribOffset:offsetof(SceneVertex, positionCoords)
+                                      shouldEnable:YES];
+        
+        [self.vertexBuffer prepareToDrawWithAttrib:GLKVertexAttribTexCoord0
+                               numberOfCoordinates:2
+                                      attribOffset:offsetof(SceneVertex, textureCoords)
+                                      shouldEnable:YES];
+        
+        [self.vertexBuffer prepareToDrawWithAttrib:GLKVertexAttribTexCoord1
+                               numberOfCoordinates:2
+                                      attribOffset:offsetof(SceneVertex, textureCoords)
+                                      shouldEnable:YES];
+        
+        [self.baseEffect prepareToDraw];
+        
+        // Draw triangles using currently bound vertex buffer
+        [self.vertexBuffer drawArrayWithMode:GL_TRIANGLES
+                            startVertexIndex:0
+                            numberOfVertices:sizeof(vertices) / sizeof(SceneVertex)];
+    }
+
+###总结
+上面就是多重纹理使用，主要是要清楚使用多重纹理在一个通道的优点即可。
+
 ##20161216
 本章将学习**采样方式对纹理的影响**。
 
